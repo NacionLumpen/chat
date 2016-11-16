@@ -1,0 +1,8 @@
+namespace :server do
+  desc "basic server run"
+  task :run do
+    require_relative "lib/nlchat/nl_chat_server_basic.rb"
+    nl_chat_server = NLChatServerBasic.new()
+    nl_chat_server.service
+  end
+end
