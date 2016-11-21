@@ -1,3 +1,3 @@
 A simple chat implemented in several programming paradigms.
 
--[Ruby implementation](poo/dinamically-typed/ruby/README.md)
+-[Ruby implementation](oop/dynamically-typed/ruby/README.md)
