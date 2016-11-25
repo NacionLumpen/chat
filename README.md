@@ -2,7 +2,8 @@
 
 A simple chat implemented in several programming paradigms.
 
--[Ruby implementation](oop/dynamically-typed/ruby/README.md)
+-[Dynamic OOP](oop/dynamically-typed/ruby/README.md) (Ruby)
+-["Dynamic" actor model](actors/akkachat/README.md) (Scala/Akka)
 
 ## Protocol specification
 
