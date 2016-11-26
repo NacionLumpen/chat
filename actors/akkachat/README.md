@@ -16,12 +16,12 @@ A working [SBT][sbt] installation.
 
 From SBT:
 
-    > sbt run
+    > sbt run listen
    
 Creating a standalone JAR:
 
     > sbt assembly
-    > java -jar target/scala-2.11/akkachat.jar
+    > java -jar target/scala-2.11/akkachat.jar listen
    
 ## Connecting to the server
 
