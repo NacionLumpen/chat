@@ -11,7 +11,7 @@ class CommandParserTest extends FlatSpec with Matchers with PropertyChecks {
 
   "Any command" should "have round trip parsing" in {
     forAll { (command: Command) =>
-      CommandParser.parse(command.toString) shouldBe DRight(command)
+      CommandParser.parse(command.toFrame.value) shouldBe DRight(command)
     }
   }
 }

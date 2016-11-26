@@ -11,15 +11,24 @@ class Channel extends Actor {
     case Channel.Register =>
       val nick = Nick.of(s"anon$nextId")
       nextId += 1
+      users.keySet.foreach(_ ! Channel.Joining(nick))
       users += (sender -> nick)
-      // TODO: subscribe to client death
+      context.watch(sender)
       sender ! Channel.Registered(nick)
+
+    case Channel.Unregister(message) =>
+      users.get(sender).foreach { nick =>
+        users -= sender
+        users.keySet.foreach(_ ! Channel.Leaving(nick, message))
+      }
 
     case Channel.Rename(nick) if users.values.exists(_ == nick) => sender ! Channel.NickInUse
 
-    case Channel.Rename(nick) =>
-      users += (sender -> nick)
-      sender ! Channel.Renamed(nick)
+    case Channel.Rename(newNick) =>
+      users.get(sender).foreach { oldNick =>
+        users += (sender -> newNick)
+        users.keys.foreach(_ ! Channel.Renamed(oldNick, newNick))
+      }
 
     case Channel.SendMsg(payload) =>
       for (senderNick <- users.get(sender);
@@ -41,7 +50,11 @@ class Channel extends Actor {
         sender ! Channel.Kicked(nick)
       }
 
-    case Channel.Kick(nick) => sender ! Channel.UnknownUser(nick)
+    case Terminated(user) =>
+      users.get(user).foreach { nick =>
+        users -= user
+        users.keys.foreach(_ ! Channel.Leaving(nick, ""))
+      }
   }
 
 }
@@ -49,10 +62,14 @@ class Channel extends Actor {
 object Channel {
   case object Register
   case class Registered(as: Nick)
+  case class Joining(nick: Nick)
+
+  case class Unregister(message: String)
+  case class Leaving(nick: Nick, message: String)
 
   case class Rename(to: Nick)
   case object NickInUse
-  case class Renamed(to: Nick)
+  case class Renamed(from: Nick, to: Nick)
 
   case class SendMsg(message: String)
   case class ReceiveMsg(nick: Nick, message: String)

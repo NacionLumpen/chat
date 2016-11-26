@@ -23,12 +23,16 @@ object Arbitraries {
   implicit val arbKickCommand =
     Arbitrary[Command.Kick](arbitrary[Nick].map(Command.Kick.apply))
 
+  implicit val arbQuitCommand =
+    Arbitrary[Command.Quit](genPayload.map(Command.Quit.apply))
+
   implicit val arbCommand = Arbitrary[Command](
     Gen.oneOf(
       Gen.const(Command.LookupNick),
       arbitrary[Command.RenameTo],
       arbitrary[Command.Message],
       Gen.const(Command.LookupNames),
-      arbitrary[Command.Kick]
+      arbitrary[Command.Kick],
+      arbitrary[Command.Quit]
     ))
 }

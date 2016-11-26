@@ -16,7 +16,8 @@ object CommandParser {
     def message = "MSG" ~> trailingText ^^ Command.Message.apply
     def lookupNames = "NAMES" ^^^ Command.LookupNames
     def kick = "KICK" ~> nick ^^ Command.Kick.apply
-    def command: Parser[Command] = renameTo | lookupNick | message | lookupNames | kick
+    def quit = "QUIT" ~> trailingText ^^ Command.Quit.apply
+    def command: Parser[Command] = renameTo | lookupNick | message | lookupNames | kick | quit
   }
 
   def parse(message: String): String \/ Command =
