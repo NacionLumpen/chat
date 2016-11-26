@@ -1,4 +1,4 @@
-package com.nacionlumpen
+package com.nacionlumpen.server
 
 import java.net.InetSocketAddress
 

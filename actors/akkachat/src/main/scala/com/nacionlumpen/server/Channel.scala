@@ -1,4 +1,4 @@
-package com.nacionlumpen
+package com.nacionlumpen.server
 
 import akka.actor._
 import com.nacionlumpen.model.Nick
