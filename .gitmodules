@@ -1,0 +1,3 @@
+[submodule "fp/haskell"]
+	path = fp/haskell
+	url = https://github.com/serras/nacionlumpen-chat-haskell.git
