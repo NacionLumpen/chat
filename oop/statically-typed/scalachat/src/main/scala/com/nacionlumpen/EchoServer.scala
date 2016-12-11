@@ -1,7 +1,9 @@
 package com.nacionlumpen
 
 import java.io._
-import java.net.ServerSocket
+import java.net.{ServerSocket, Socket}
+
+import com.nacionlumpen.model.{NotImplemented, Ok}
 
 object EchoServer extends App {
   val port = 4444
@@ -10,19 +12,26 @@ object EchoServer extends App {
   while(true) {
     val clientSocket = serverSocket.accept()
     println("Accepted connection from client")
+    new Client(clientSocket).run()
+  }
+}
 
-    val in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream))
-    val out = new PrintStream(clientSocket.getOutputStream)
+class Client(socket: Socket) extends Runnable {
+  override def run(): Unit = try {
+    val in = new BufferedReader(new InputStreamReader(socket.getInputStream))
+    val out = new PrintStream(socket.getOutputStream)
 
     var line = ""
     while ((line = in.readLine()) != null) {
-      println(line)
-      out.println(line)
+      val nick = """NICK\s+(.*)""".r
+      line match {
+        case nick(name) => out.println(Ok("Nick named accepted"))
+        case _ => out.println(NotImplemented("Command not found"))
+      }
     }
 
     println("Closing connection with client")
     out.close()
     in.close()
-    clientSocket.close()
-  }
+  } finally socket.close()
 }
