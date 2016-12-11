@@ -12,7 +12,7 @@ object EchoServer extends App {
   while(true) {
     val clientSocket = serverSocket.accept()
     println("Accepted connection from client")
-    new Client(clientSocket).run()
+    new Thread(new Client(clientSocket)).start()
   }
 }
 
