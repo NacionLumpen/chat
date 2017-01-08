@@ -1,7 +1,5 @@
 # current commit
 
-- create the simplest chat that works without external dependences, only language
-- document how to use with rake
 
 # nexts commits or ideas for never implement
 
@@ -18,4 +16,10 @@
 
 # change log
 
+version 0.0.2
+
+  add ruby irc logic and minimal test.
+
 version 0.0.1
+
+  scaffold for ruby chat server implementation

@@ -1,8 +1,28 @@
+require 'rake/testtask'
+
+Rake::TestTask.new do |t|
+  t.libs << 'test'
+  t.pattern = "test/*_test.rb"
+end
+
+
 namespace :server do
-  desc "basic server run"
-  task :run do
+  desc "run a basic server"
+  task :run ,[:port] do |t,args|
+    # rake server:run[:portNumber]
+    # examples:
+    # rake server:run
+    # rake server:run[1212]
     require_relative "lib/nlchat/nl_chat_server_basic.rb"
-    nl_chat_server = NLChatServerBasic.new()
-    nl_chat_server.service
+    # puts "args[:port]=#{args[:port]}"
+    if !args[:port].nil? and args[:port].to_i.is_a? Integer
+      nl_chat_server = NLChatServerBasic.new(args[:port])
+      nl_chat_server.service
+    elsif args[:port].nil? or args[:port].empty?
+      nl_chat_server = NLChatServerBasic.new()
+      nl_chat_server.service
+    else
+      puts "Error: argument error, invalid port number  '#{args[:port]}'"
+    end
   end
 end
