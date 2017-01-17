@@ -1,3 +1,6 @@
 [submodule "fp/haskell"]
 	path = fp/haskell
 	url = https://github.com/serras/nacionlumpen-chat-haskell.git
+[submodule "fp/haskell-concurrent"]
+	path = fp/haskell-concurrent
+	url = git@github.com:anler/fpchat.git
