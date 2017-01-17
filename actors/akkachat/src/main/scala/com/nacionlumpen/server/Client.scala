@@ -1,13 +1,12 @@
-package com.nacionlumpen
+package com.nacionlumpen.server
 
 import java.net.InetSocketAddress
 
 import akka.actor.{Actor, ActorRef, Stash}
 import akka.io.Tcp
 import akka.util.ByteString
+import com.nacionlumpen.frames.{Frame, FrameBuffer}
 import com.nacionlumpen.model._
-import scalaz._
-import Scalaz._
 
 class Client(connection: ActorRef, address: InetSocketAddress, channel: ActorRef)
     extends Actor
@@ -15,7 +14,7 @@ class Client(connection: ActorRef, address: InetSocketAddress, channel: ActorRef
 
   context.watch(connection) // Die with the connection
 
-  val buffer = new MessageBuffer
+  val buffer = new FrameBuffer
   channel ! Channel.Register
 
   private def bufferingMessages(nick: Option[Nick]): Receive = {
@@ -27,11 +26,15 @@ class Client(connection: ActorRef, address: InetSocketAddress, channel: ActorRef
       case Tcp.Received(data) =>
         buffer
           .append(data)
-          .flatMap(_.traverseU(CommandParser.parse))
-          .fold(error => {
-            println(s"closing connection to $id: $error")
-            sender ! Tcp.Abort
-          }, commands => commands.foreach(self ! _))
+          .fold(
+            error => {
+              println(s"closing connection to $id: $error")
+              sender ! Tcp.Abort
+            },
+            frames =>
+              frames.foreach { frame =>
+                self ! CommandParser.parse(frame.value).valueOr(Client.UnrecognizedCommand.apply)
+            })
 
       case Tcp.PeerClosed =>
         println(s"Connection to $id closed")
@@ -57,7 +60,7 @@ class Client(connection: ActorRef, address: InetSocketAddress, channel: ActorRef
 
     case Command.Message(message) =>
       channel ! Channel.SendMsg(message)
-      sendMessage(Response.Ok(""))
+      sendMessage(Response.Ok("sent"))
 
     case Command.LookupNames =>
       channel ! Channel.Names
@@ -67,16 +70,33 @@ class Client(connection: ActorRef, address: InetSocketAddress, channel: ActorRef
       channel ! Channel.Kick(user)
       context.become(waitingForChannelResponse(nick))
 
+    case Command.Quit(message) =>
+      channel ! Channel.Unregister(message)
+      sendMessage(Response.Ok("bye"))
+      context.stop(self)
+
     case unsupported: Command =>
-      sendMessage(Response.UnrecognizedCommand(s"$unsupported is unsupported"))
+      sendMessage(Response.UnrecognizedCommand(s"unsupported '${unsupported.toFrame.value}'"))
+
+    case Client.UnrecognizedCommand(message) =>
+      sendMessage(Response.UnrecognizedCommand(s"unrecognized command: $message"))
 
     case Channel.ReceiveMsg(from, message) =>
       sendMessage(Notification.Message(from, message))
+
+    case Channel.Joining(who) =>
+      sendMessage(Notification.Joined(who))
+
+    case Channel.Leaving(who, message) =>
+      sendMessage(Notification.Left(who, message))
+
+    case Channel.Renamed(from, to) =>
+      sendMessage(Notification.Rename(from, to))
   }
 
   private def waitingForChannelResponse(nick: Nick): Receive =
     ({
-      case Channel.Renamed(newNick) =>
+      case Channel.Renamed(_, newNick) =>
         println(s"$address's nick is $newNick")
         sendMessage(Response.Ok(s"renamed to $newNick"))
         context.become(waitingForCommands(newNick))
@@ -94,9 +114,10 @@ class Client(connection: ActorRef, address: InetSocketAddress, channel: ActorRef
         context.become(waitingForCommands(nick))
 
       case Channel.Names(names) =>
-        sendMessage(Response.Roster(names)) // TODO: split long list of names
+        val (partialRosters, endOfRoster) = Response.Roster.from(names)
+        partialRosters.foreach(sendMessage)
+        sendMessage(endOfRoster)
         context.become(waitingForCommands(nick))
-
 
     }: Receive) orElse bufferingMessages(Some(nick)) orElse delayingEverythingElse
 
@@ -109,11 +130,16 @@ class Client(connection: ActorRef, address: InetSocketAddress, channel: ActorRef
     }: Receive) orElse bufferingMessages(None) orElse delayingEverythingElse
 
   private def sendMessage(message: Message): Unit = {
-    connection ! Tcp.Write(ByteString(message + "\n")) // TODO: respect message size limit
+    sendMessage(message.toFrame)
+  }
+
+  private def sendMessage(frame: Frame): Unit = {
+    connection ! Tcp.Write(ByteString(frame.value + "\n"))
   }
 
 }
 
 object Client {
   val NickCommand = """NICK\s+(\w+)\s*""".r
+  case class UnrecognizedCommand(error: String)
 }

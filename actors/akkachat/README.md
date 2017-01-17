@@ -14,4 +14,20 @@ A working [SBT][sbt] installation.
 
 ## Launching the server
 
-TODO
+From SBT:
+
+    > sbt run listen
+   
+Creating a standalone JAR:
+
+    > sbt assembly
+    > java -jar target/scala-2.11/akkachat.jar listen
+   
+## Connecting to the server
+
+No client at the moment but you can use the good old `telnet`.
+
+    > telnet localhost 2121
+    NICK myself
+    200 renamed to myself
+    ...
