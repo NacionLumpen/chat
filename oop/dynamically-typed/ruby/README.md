@@ -19,24 +19,29 @@ like a gem folder structure, you know...
         └── nl_server_basic.rb
     └─  Rakefile
     └─  README.md
+    └─  test
+      └── nl_chat_command_parser_test.rb
 
 ```
 
 ## how to use
 
-### launching the server
-
 From now using rake. set your directory inside of ruby folder
 
+
+### launching the server
 
     $ cd chat/opp/dinamically-typed/ruby
     $ rake server:run
 
 ### using telnet like client
 
-
     $ telnet 127.0.0.1 1212
 
+### run test
 
+    $ rake test
+
+    only test unit for classes
 
 [back to main readme](/README.md)
