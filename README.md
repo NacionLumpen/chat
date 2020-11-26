@@ -1,4 +1,4 @@
-# Chat
+# Chat Comparison
 
 A simple chat implemented in several programming paradigms.
 
